@@ -1,64 +1,15 @@
-FROM debian:stretch-slim
+FROM centos
 
-MAINTAINER Xiaoming <mail@xiaoming.se>
+MAINTAINER Yonier Gomez yonieer13@gmail.com
 
-# PREPARATIONS
-ENV DEBIAN_FRONTEND noninteractive
+LABEL version: 4.6.4.0
 
+RUN dnf -y install https://github.com/MediaBrowser/Emby.Releases/releases/download/4.6.4.0/emby-server-rpm_4.6.4.0_x86_64.rpm
 
-# Set LOCALEs
+RUN mkdir -p multimedia/{videos,musica,peliculas}
 
-RUN apt-get clean && apt-get update -q && apt-get install -y --allow-unauthenticated locales
-ENV LANGUAGE en_US.UTF-8
+WORKDIR /multimedia
 
-ENV LANG en_US.UTF-8
-RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
-    locale-gen en_US en_US.UTF-8 && \
-    update-locale LANG=en_US.UTF-8
+EXPOSE 8096 8920 7359/udp 1900/udp
 
-# Upgrading debian
-RUN apt-mark hold initscripts udev plymouth && \
-    apt-get install -y apt-utils --allow-unauthenticated && \
-    apt-get -q update && \
-    apt-get dist-upgrade -qy && apt-get -q update
-
-
-
-# Installing Emby-server
-RUN apt-get -q update && \
-    apt-get install -y --allow-unauthenticated curl gnupg  && \
-    echo 'deb http://download.opensuse.org/repositories/home:/emby/Debian_9.0/ /' > /etc/apt/sources.list.d/home:emby.list && \
-    curl -fsSL https://download.opensuse.org/repositories/home:emby/Debian_9.0/Release.key | apt-key add - && \
-    apt-get -q update && \
-    apt-get -qy --allow-downgrades --allow-remove-essential --allow-change-held-packages install emby-server
-
-#Additional dependencies
-RUN apt-get install -qy --allow-unauthenticated ffmpeg libavcodec-extra procps
-
-# Clean up
-RUN apt-get -qy autoremove
-
-#Setup Datafiles
-
-RUN mkdir /config && \
-    echo "EMBY_DATA=/config" > /etc/emby-server.conf && \
-    chown emby:emby -R /config
-ENV EMBY_DATA /config
-
-
-VOLUME ["/config"]
-
-#Export default http port
-EXPOSE 8096/tcp
-
-#Export default https port
-EXPOSE 8920/tcp
-
-#UDP
-EXPOSE 7359/udp
-
-#ssdp port for UPnP /DLNA discovery
-EXPOSE 1900/udp
-
-# Starting the service
-CMD /usr/bin/emby-server start
+CMD /opt/emby-server/bin/emby-server
