@@ -1,8 +1,6 @@
-FROM amd64/docker
+FROM emby/embyserver
 
 LABEL version: 4.6.4.0
-
-RUN docker pull emby/embyserver:latest
 
 RUN mkdir -p multimedia/{videos,musica,peliculas}
 
